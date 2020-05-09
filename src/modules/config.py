@@ -12,6 +12,8 @@ class Config(dict):
             self.update(json.loads(self.path.read_text()))
         else:
             pr(f'Config not found, generating fresh in: "{cyan(path)}"', '!')
+            for k, v in default_setup['modules'].items():
+                v.update({'subdir': k})
             self.update(default_setup)
             self.save()
 

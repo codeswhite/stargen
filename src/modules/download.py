@@ -10,13 +10,13 @@ from utils import pr, cyan, cprint
 class Download:
     def __init__(self, stargen):
         super().__init__()
-        self.config = stargen.config['down']
+        self.config = stargen.config['modules']['down']
         self.dest_dir = Path(
             stargen.config['workspace']) / self.config['subdir']
 
         # Identify existing downloads
         try:
-            self.packs = os.listdir(self.dest_dir)
+            self.packs = listdir(self.dest_dir)
         except FileNotFoundError:
             self.packs = []
 
@@ -26,7 +26,7 @@ class Download:
             'download': (self.download, 'Download a new wordlists pack from the repo')
         }
 
-    def show(self, args) -> None:
+    def show(self, args: tuple) -> None:
         pr(f'Dictionaries repo URL: "{cyan(self.config["dict_url"])}"')
         pr(f'Destination directory: "{cyan(str(self.dest_dir))}"')
         if not self.packs:
@@ -36,7 +36,7 @@ class Download:
             cprint('  ' + p, 'yellow')
         pr(f'Packs count: ' + cyan(len(self.packs)))
 
-    def download(self, args) -> None:
+    def download(self, args: tuple) -> None:
         self.show(())  # Show setup
         print()
         print("	\r\n	Choose the pack you want to download:\r\n")

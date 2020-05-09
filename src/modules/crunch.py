@@ -35,7 +35,7 @@ def gen_nums(charset: str, min_len: int, max_len: int, work_dir: Path) -> (Path,
 class Crunch:
     def __init__(self, stargen):
         super().__init__()
-        self.config = stargen.config['crunch']
+        self.config = stargen.config['modules']['crunch']
         self.dest_dir = Path(
             stargen.config['workspace']) / self.config['subdir']
 
@@ -51,7 +51,7 @@ class Crunch:
             'gen': (self.gen, 'Generate a new wordlists via crunch')
         }
 
-    def show(self, args) -> None:
+    def show(self, args: tuple) -> None:
         pr(f'Destination directory: "{cyan(str(self.dest_dir))}"')
         if not self.crunches:
             return pr('No crunches downloaded yet!', '!')
@@ -60,7 +60,7 @@ class Crunch:
             cprint('  ' + p, 'yellow')
         pr(f'Crunches count: ' + cyan(len(self.crunches)))
 
-    def gen(self, args) -> None:
+    def gen(self, args: tuple) -> None:
         if not is_package('crunch'):
             return pr('Package "crunch" not installed!', 'X')
 

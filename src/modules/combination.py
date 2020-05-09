@@ -3,9 +3,12 @@ from utils import pr, cyan, choose, pause
 from os import listdir
 from subprocess import check_output
 from time import time, strftime, gmtime
+from typing import Optional, Callable
+
+from ..iteration_timer import IterationTimer
 
 
-def human_size(size_in_bytes: int):
+def human_bytes(size_in_bytes: int) -> str:
     unit = 0
     while size_in_bytes >= 1024:
         unit += 1
@@ -14,21 +17,16 @@ def human_size(size_in_bytes: int):
 
 
 def count_lines(file_path: Path) -> int:
-    # TODO Crossplatform
+    # TODO Crossplatformize
     return int(check_output(('/usr/bin/wc', '-l', str(file_path.resolve()))).decode().split(' ')[0])
 
 
-def avail_space(workspace: Path) -> int:
-    # TODO Crossplatform
-    return 1024 * int(check_output(('/usr/bin/df', '--sync', '--output=avail', str(workspace.resolve()))).decode().split('\n')[1])
-
-
-def choose_file(root_dir: PurePath) -> (PurePath, None):
-    def _format(root_dir: PurePath, entry: str):
+def choose_file(root_dir: PurePath) -> Optional[PurePath]:
+    def _format(root_dir: PurePath, entry: str) -> str:
         f = root_dir / entry
         if f.is_dir():
             return entry
-        return f'{entry}\t({human_size(f.stat().st_size)}, {count_lines(f)})'
+        return f'{entry}\t({human_bytes(f.stat().st_size)}, {count_lines(f)})'
     listing = listdir(root_dir)
     if not listing:
         return pr('Empty directory!', '!')
@@ -44,64 +42,93 @@ def choose_file(root_dir: PurePath) -> (PurePath, None):
         return f
 
 
+def print_file_volume(path: Path, show: bool = True) -> tuple:
+    sb = path.stat().st_size
+    lc = count_lines(path)
+    if show:
+        pr(f'  {cyan(path.name)} ({human_bytes(sb)}, {lc})')
+    return sb, lc
+
+
+def show_disk_impact(workspace: Path, tsb: int, tlc: int) -> bool:
+    def avail_space(workspace: Path, show: bool = True) -> int:
+        # TODO Crossplatformize
+        b = check_output(
+            ('/usr/bin/df', '--sync', '--output=avail', str(workspace.resolve())))
+        b = 1024 * int(b.decode().split('\n')[1])
+        if show:
+            pr(f'Available space in workspace: ' + cyan(human_bytes(b)))
+        return b
+
+    pr(f'Mixing will allocate {cyan(human_bytes(tsb))} for {cyan("{:,}".format(tlc))} lines')
+    if tsb > avail_space(workspace):
+        pr('Not enough space on the workspace disk for such creation!', '!')
+        return False
+    return True
+
+
+def show_ebt(algos: dict, tlc: int):
+    assert tlc > 0
+
+    for algo, elps in algos.items():
+        ebt = ((tlc * 2) / elps)
+        ebt = strftime('%H:%M:%S', gmtime(ebt))
+        pr(f'Estimated {cyan(algo)} time: {cyan(ebt)} (assuming elps={elps})')
+
+
+def ask_two_wl(workspace: Path, subdir: Path, _total_calc=Callable[[int, int], int], _write_action=Callable[[Path, Path, Path, IterationTimer], None]):
+    pr('Select first wordlist:')
+    f1 = choose_file(workspace)
+    if not f1:
+        return
+    f1sb, f1lc = print_file_volume(f1)
+
+    pr('Select secund wordlist:')
+    f2 = choose_file(workspace)
+    if not f2:
+        return
+    f2sb, f2lc = print_file_volume(f2)
+
+    # Show disk impact
+    tsb = _total_calc(f1sb, f2sb)
+    tlc = _total_calc(f1lc, f2lc)
+    if not show_disk_impact(workspace, tsb, tlc):
+        return
+
+    if not pause(cancel=True):
+        return
+
+    # Verify destination directory
+    dest_dir = workspace / subdir
+    dest_dir.mkdir(exist_ok=True)
+
+    out_path: Path = dest_dir / f'{f1.stem}_{f2.stem}'
+    with out_path.open('w', encoding='utf-8') as out_file:
+        itmr = IterationTimer(tlc, init_interval=1, max_interval=15)
+        _write_action(f1, f2, out_file, itmr)
+
+    # Finalize
+    pr('Wordlist written into: ' + cyan(out_path.name))
+    show_ebt({  # TODO Move to config
+        'WPA2': 57000
+    }, tlc)
+
+
 class Combination:
     def __init__(self, stargen):
         super().__init__()
         self.stargen = stargen
-        self.config = stargen.config['comb']
-        self.dest_dir = Path(
-            stargen.config['workspace']) / self.config['subdir']
+        self.config = stargen.config['modules']['comb']
+        self.workspace = Path(self.stargen.config['workspace'])
 
     def menu(self) -> tuple:
         return 'combination', {
-            # 'show': (sel, '')
-            'mix': (self.mix, 'Mix two dicts'),
-            'craft': (self.craft, 'Craft a dict from keywords and another dict')
+            'mix': (self.mix, 'Mix two wordlists'),
+            'concat': (self.concat, 'Concatenate two wordlists')
         }
 
-    def mix(self, args) -> None:
-        workspace = Path(self.stargen.config['workspace'])
-
-        pr('Select first dictionary:')
-        f1 = choose_file(workspace)
-        if not f1:
-            return
-        f1sb = f1.stat().st_size
-        f1lc = count_lines(f1)
-        pr(f'  {cyan(f1.name)} ({human_size(f1sb)}, {f1lc})')
-
-        pr('Select secund dictionary:')
-        f2 = choose_file(workspace)
-        if not f2:
-            return
-        f2sb = f2.stat().st_size
-        f2lc = count_lines(f2)
-        pr(f'  {cyan(f2.name)} ({human_size(f2sb)}, {f2lc})')
-
-        # Show disk impact
-        availb = avail_space(workspace)
-        pr(f'Available space in workspace: ' + cyan(human_size(availb)))
-        allocb = f1sb * f2sb * 2
-        twcl = f1lc * f2lc * 2
-        pr(f'Mixing will allocate {cyan(human_size(allocb))} for {cyan("{:,}".format(twcl))} lines')
-        if allocb > availb:
-            return pr('Not enough space on the workspace disk for such a mix!', '!')
-
-        if not pause(cancel=True):
-            return
-
-        # Verify destination directory
-        self.dest_dir.mkdir(exist_ok=True)
-
-        out_path: Path = self.dest_dir / f'{f1.stem}_{f2.stem}'
-        pr(f'Mixing dictionaries into "{cyan(out_path.name)}"')
-
-        with out_path.open('w', encoding='utf-8') as out_file:
-            i = lp = 0
-            lt = time()
-            interval = 1
-            max_interval = 15
-
+    def mix(self, args: tuple) -> None:
+        def mix_action(f1: Path, f2: Path, out_file: Path, itmr: IterationTimer) -> None:
             with f1.open(encoding='utf-8') as f1d:
                 for l1 in f1d:
                     if '# ' in l1 or '##' in l1:
@@ -114,27 +141,31 @@ class Combination:
                                 continue
                             l2 = l2.strip()
 
-                            # Write
                             out_file.write(f'{l1}{l2}\n{l2}{l1}\n')
+                            itmr.tick()
 
-                            i += 1
-                            ts = time()
-                            if ts - lt > interval:
-                                spd = int((i - lp) / interval)
-                                prcnt = i / (twcl / 100)
-                                eta = int((twcl - i) / spd)
-                                pr('%.2f%% ' % prcnt +
-                                   f'[{i}/{twcl}]\t@ {spd} ps\tETA: {eta} secs')
-                                lt = ts
-                                lp = i
-                                if interval <= max_interval:
-                                    interval *= 2
-        pr('List written into: ' + cyan(out_path.name))
+        if ask_two_wl(self.workspace, self.config['subdir'],
+                      (lambda a, b: a ** b * 2), mix_action) is None:
+            return  # Currently redundant - might be of use later
 
-        ebs = 57000
-        ebt = ((twcl * 2) / ebs)
-        ebt = strftime('%H:%M:%S', gmtime(ebt))
-        pr(f'Estimated WPA2 time: {cyan(ebt)} minutes (assuming est.line/sec={ebs})')
+    def concat(self, args: tuple) -> None:
+        def concat_action(f1: Path, f2: Path, out_file: Path, itmr: IterationTimer) -> None:
+            with f1.open(encoding='utf-8') as f1d:
+                for l1 in f1d:
+                    if '# ' in l1 or '##' in l1:
+                        continue
 
-    def craft(self, args) -> None:
-        pass #TODO
+                    out_file.write(l1)
+                    itmr.tick()
+
+            with f2.open(encoding='utf-8') as f2d:
+                for l2 in f2d:
+                    if '# ' in l2 or '##' in l2:
+                        continue
+
+                    out_file.write(l2)
+                    itmr.tick()
+
+        if ask_two_wl(self.workspace, self.config['subdir'],
+                      (lambda a, b: a + b), concat_action) is None:
+            return  # Currently redundant - might be of use later
