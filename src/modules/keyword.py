@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable
 
-from utils import pr, cyan, cprint, pause
+from utils import pr, cyan, cprint, pause, choose_file, file_volume, human_bytes
 
 from .abs_module import Module
 from ..iteration_timer import IterationTimer
@@ -33,21 +33,38 @@ class Keyword(Module, set):
         modifier(count)
         pr(f'{name} added {cyan(len(self) - count)} new keywords')
 
-    def __str__(self):
-        return 'keywords'
-
     def menu(self) -> tuple:
-        return str(self), {
-            'show': (self.show, 'List all keywords and show count\n\tOpt: "total" -> Print sum total'),
+        return {
+            'load': (self.load, 'Load keywords from wordlist on the disk'),
+            'show': (self.print_all, 'List all keywords and show count\n\tOpt: "total" -> Print sum total'),
             'expand': (self.expand, 'Expand keywords\n\tOpt: "all" -> Execute all modifications'),
-            'dump': (self.dump, 'Dump keywrods into a file\n\tOpt: <file_name> -> Specify a file name'),
+            'dump': (self.dump, 'Dump keywords into a file\n\tOpt: <file_name> -> Specify a file name'),
             'add': (self._add, 'Add keyword(s)'),
             'rem': (self.rem, 'Remove keyword(s)'),
             'clear': (self._clear, 'Clear all keywords'),
             'isin': (self.isin, 'Check if string(s) among keywords')
         }
 
-    def show(self, args: tuple) -> None:
+    def load(self, args: tuple) -> None:
+        if self:
+            pr(f'Already have {cyan(len(self))} keywords')
+            if not pause(cancel=True):
+                return
+        f = choose_file(self.workspace)
+        if not f:
+            return
+
+        sb, lc, txt = file_volume(f)
+        pr(txt)
+
+        if sb > 100*1024**2:
+            pr(f'File is too larget to be loaded into RAM!', '!')
+            return
+        pr('Loading keywords...')
+        self.update(f.read_text(encoding='utf-8').split('\n'))
+        pr('Done!')
+
+    def print_all(self, args: tuple) -> None:
         if not self:
             return pr('No keywords registered yet!', '!')
 
@@ -66,6 +83,9 @@ class Keyword(Module, set):
         pr(f'Total keywords count: ' + cyan(len(self)))
 
     def expand(self, args: tuple) -> None:
+        if not self:
+            return pr('No keywords registered yet!', '!')
+
         auto_all = False
         if len(args) > 0:
             auto_all = args[0] == 'all'
@@ -103,9 +123,12 @@ class Keyword(Module, set):
         a = []
         if len(self) > self.config['list_treshold']:
             a += ['total']
-        self.show(a)
+        self.print_all(a)
 
     def dump(self, args: tuple) -> None:
+        if not self:
+            return pr('No keywords registered yet!', '!')
+
         # Verify target directory
         dest_dir = self.workspace / self.config['subdir']
         dest_dir.mkdir(exist_ok=True)

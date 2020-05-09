@@ -3,15 +3,17 @@ from pathlib import Path
 from argparse import Namespace
 from random import choice
 
-from utils import pr, cyan, cprint, banner, generic_menu_loop, choose_file
+from utils import pr, cyan, cprint, banner, colored, choose_file
 
-from src.modules import *
+from .config import Config
+from .modules import *
 
 
 class Stargen:
     DEFAULT_CONFIG_PATH = Path.cwd() / 'config.json'
     DEFAULT_CONFIG_SETUP = {
         'workspace': str(Path.cwd().joinpath('dicts').resolve()),
+        'prompt': '[ stargen ]> ',
         'modules': {
             'kwd': {
                 'list_treshold': 50
@@ -36,31 +38,51 @@ class Stargen:
             args.config if args.config else Stargen.DEFAULT_CONFIG_PATH,
             Stargen.DEFAULT_CONFIG_SETUP)
 
-        # Initialize modules
-        self.keywords = Keyword(self)
-        self.crunch = Crunch(self)
-        self.downloads = Download(self)
-        self.combinations = Combination(self)
-
-        # Welcoming message
-        cprint(banner('Stargen'), choice(('red', 'green', 'blue')))
-        pr(f'Enter "{cyan("help")}" to see list of available commands,\n' +
-           '    enter blank to exit from current menu', '?')
-
         # Create workspace dir
         self.workspace = Path(self.config['workspace'])
         Path(self.workspace).mkdir(exist_ok=True)
 
-        # Enter main menu
+        # Initialize modules
+        self.modules = (
+            Keyword(self),
+            Crunch(self),
+            Download(self),
+            Combination(self)
+        )
+        # Initialize menu
+        menu = {}
+        for mod in self.modules:
+            menu.update(mod.menu())
+
+        # Welcoming message & enter main menu
+        cprint(banner('Stargen'), choice(('red', 'green', 'blue')))
+        pr(f'Enter "{cyan("help")}" to see list of available commands,\n' +
+           '    [Ctrl + C] to exit', '?')
         try:
-            generic_menu_loop('stargen', {
-                'kwd': self.keywords.menu(),
-                'crun': self.crunch.menu(),
-                'down': self.downloads.menu(),
-                'comb': self.combinations.menu()
-            })
+            while 1:
+                # Get user input
+                inp = input(
+                    colored(self.config['prompt'], 'red', attrs=['bold']))
+                if not inp:
+                    continue
+
+                # Help the user
+                if 'help' in inp:
+                    for k, v in menu.items():
+                        print(f'  {cyan(k)} -> {colored(v[1], "yellow")}')
+                    continue
+
+                # Get command
+                pts = inp.split(' ')
+                cmd = pts[0]
+                if cmd not in menu:
+                    pr(f'No such command! try "{cyan("help")}".', '!')
+                    continue
+
+                # Call menu entry
+                menu.get(cmd)[0](tuple([i for i in pts[1:] if i]))
+                print()
         except (KeyboardInterrupt, EOFError):
             print()
-            pr('\nInterrupted!', '!')
         finally:
             self.config.save()

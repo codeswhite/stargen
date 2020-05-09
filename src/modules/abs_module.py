@@ -10,9 +10,3 @@ class Module:
         self.config = stargen.config['modules'][short_n]
         self.workspace = Path(stargen.config['workspace'])
         self.dest_dir = self.workspace / self.config['subdir']
-
-    def __str__(self):
-        raise NotImplementedError
-
-    def menu(self) -> tuple:
-        raise NotImplementedError

@@ -44,13 +44,10 @@ class Crunch(Module):
         except FileNotFoundError:
             self.crunches = []
 
-    def __str__(self):
-        return 'crunch'
-
     def menu(self) -> tuple:
-        return str(self), {
-            'show': (self.show, 'Show crunches'),
-            'gen': (self.gen, 'Generate a new wordlists via crunch')
+        return {
+            # 'show': (self.show, 'Show crunches'),
+            'crunch': (self.gen, 'Generate a new wordlists via crunch')
         }
 
     def show(self, args: tuple) -> None:

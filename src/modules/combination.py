@@ -78,12 +78,9 @@ class Combination(Module):
     def __init__(self, stargen):
         super().__init__(stargen, 'comb')
 
-    def __str__(self):
-        return 'combination'
-
     def menu(self) -> tuple:
-        return str(self), {
-            'mix': (self.mix, 'Mix two wordlists'),
+        return {
+            'intermix': (self.mix, 'Mix two wordlists'),
             'concat': (self.concat, 'Concatenate two wordlists')
         }
 

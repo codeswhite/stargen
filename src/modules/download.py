@@ -13,24 +13,14 @@ class Download(Module):
     def __init__(self, stargen):
         super().__init__(stargen, 'down')
 
-        # Identify existing downloads
-        try:
-            self.packs = listdir(self.dest_dir)
-        except FileNotFoundError:
-            self.packs = []
-
-    def __str__(self):
-        return 'downloads'
-
     def menu(self) -> tuple:
-        return str(self), {
-            'show': (self.show, 'Show downloads'),
+        return {
+            # 'show': (self.show, 'Show downloads'),
             'download': (self.download, 'Download a new wordlists pack from the repo')
         }
 
     def show(self, args: tuple) -> None:
-        pr(f'Dictionaries repo URL: "{cyan(self.config["dict_url"])}"')
-        pr(f'Destination directory: "{cyan(str(self.dest_dir))}"')
+
         if not self.packs:
             return pr('No packs downloaded yet!', '!')
         pr('Available packs:')
@@ -39,7 +29,15 @@ class Download(Module):
         pr(f'Packs count: ' + cyan(len(self.packs)))
 
     def download(self, args: tuple) -> None:
-        self.show(())  # Show setup
+        # Identify existing downloads
+        try:
+            self.packs = listdir(self.dest_dir)
+        except FileNotFoundError:
+            self.packs = []
+
+        pr(f'Dictionaries repo URL: "{cyan(self.config["dict_url"])}"')
+        pr(f'Destination directory: "{cyan(str(self.dest_dir))}"')
+
         print()
         print("	\r\n	Choose the pack you want to download:\r\n")
         print("     1. Moby         14. french     27. places")
