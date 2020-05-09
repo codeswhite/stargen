@@ -1,3 +1,4 @@
+from src.modules.abs_module import Module
 from src.modules.config import Config
 from src.modules.keyword import Keyword
 from src.modules.download import Download

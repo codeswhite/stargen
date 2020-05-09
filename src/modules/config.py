@@ -9,16 +9,15 @@ class Config(dict):
         super().__init__({})
         self.path = path
         if path.is_file():
+            # Load
             self.update(json.loads(self.path.read_text()))
         else:
+            # Initialize and save
             pr(f'Config not found, generating fresh in: "{cyan(path)}"', '!')
             for k, v in default_setup['modules'].items():
                 v.update({'subdir': k})
             self.update(default_setup)
             self.save()
-
-        # Create workspace dir
-        Path(self['workspace']).mkdir(exist_ok=True)
 
     def save(self):
         self.path.write_text(json.dumps(self))

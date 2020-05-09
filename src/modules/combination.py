@@ -5,6 +5,7 @@ from time import time, strftime, gmtime
 from typing import Optional, Callable
 
 from ..iteration_timer import IterationTimer
+from .abs_module import Module
 
 
 def show_disk_impact(workspace: Path, tsb: int, tlc: int) -> bool:
@@ -73,15 +74,15 @@ def ask_two_wl(workspace: Path, subdir: Path, _total_calc=Callable[[int, int], i
     }, tlc)
 
 
-class Combination:
+class Combination(Module):
     def __init__(self, stargen):
-        super().__init__()
-        self.stargen = stargen
-        self.config = stargen.config['modules']['comb']
-        self.workspace = Path(self.stargen.config['workspace'])
+        super().__init__(stargen, 'comb')
+
+    def __str__(self):
+        return 'combination'
 
     def menu(self) -> tuple:
-        return 'combination', {
+        return str(self), {
             'mix': (self.mix, 'Mix two wordlists'),
             'concat': (self.concat, 'Concatenate two wordlists')
         }

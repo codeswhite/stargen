@@ -5,6 +5,8 @@ from subprocess import call
 
 from utils import pr, cyan, cprint, colored, is_package, choose, pause
 
+from .abs_module import Module
+
 CHAR_FILE = Path('/usr/share/crunch/charset.lst')
 
 
@@ -32,12 +34,9 @@ def gen_nums(charset: str, min_len: int, max_len: int, work_dir: Path) -> (Path,
     return file_name
 
 
-class Crunch:
+class Crunch(Module):
     def __init__(self, stargen):
-        super().__init__()
-        self.config = stargen.config['modules']['crunch']
-        self.dest_dir = Path(
-            stargen.config['workspace']) / self.config['subdir']
+        super().__init__(stargen, 'crun')
 
         # Identify existing crunches
         try:
@@ -45,8 +44,11 @@ class Crunch:
         except FileNotFoundError:
             self.crunches = []
 
+    def __str__(self):
+        return 'crunch'
+
     def menu(self) -> tuple:
-        return 'crunch', {
+        return str(self), {
             'show': (self.show, 'Show crunches'),
             'gen': (self.gen, 'Generate a new wordlists via crunch')
         }
@@ -87,7 +89,12 @@ class Crunch:
         self.dest_dir.mkdir(exist_ok=True)
 
         # Crunch it
-        crunch_name = gen_nums(charset, min_len, max_len, self.dest_dir)
-        if not crunch_name:
-            return pr("Crunch was NOT generated!", 'X')
-        self.crunches.append(crunch_name)  # Save result
+        try:
+            crunch_name = gen_nums(charset, min_len, max_len, self.dest_dir)
+            if not crunch_name:
+                return pr("Crunch was NOT generated!", 'X')
+            self.crunches.append(crunch_name)  # Save result
+        except:
+            print()
+            pr('Interrupted!', '!')
+            return

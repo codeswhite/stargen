@@ -5,3 +5,11 @@ add more keyword expansion modifiers
 # Crossplatformization:
     * Functions in utils
     * 'termcolor' -> 'colorama'
+
+
+# Rewrite Concept:
+    * Rewrite menu structure to contain all commands from main menu - somewhat like radare2
+    * introduce commands like
+        "un/load" -> set current work on a particular file
+        "write" -> Dump
+    * this can be applied to slain as well

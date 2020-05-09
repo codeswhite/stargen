@@ -6,13 +6,12 @@ import gzip
 
 from utils import pr, cyan, cprint
 
+from .abs_module import Module
 
-class Download:
+
+class Download(Module):
     def __init__(self, stargen):
-        super().__init__()
-        self.config = stargen.config['modules']['down']
-        self.dest_dir = Path(
-            stargen.config['workspace']) / self.config['subdir']
+        super().__init__(stargen, 'down')
 
         # Identify existing downloads
         try:
@@ -20,8 +19,11 @@ class Download:
         except FileNotFoundError:
             self.packs = []
 
+    def __str__(self):
+        return 'downloads'
+
     def menu(self) -> tuple:
-        return 'downloads', {
+        return str(self), {
             'show': (self.show, 'Show downloads'),
             'download': (self.download, 'Download a new wordlists pack from the repo')
         }
@@ -269,7 +271,8 @@ class Download:
             pf = pack[0] + "/" + fi
             pr(f"Downloading & ungzipping '{cyan(pf)}'")
             with urlopen(self.config['dict_url'] + pf) as web:
-                dest.joinpath(fi.replace('.gz', '')).write_bytes(gzip.decompress(web.read()))
+                dest.joinpath(fi.replace('.gz', '')).write_bytes(
+                    gzip.decompress(web.read()))
 
         # Finish
         self.packs.append(pack[0])

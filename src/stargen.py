@@ -3,7 +3,7 @@ from pathlib import Path
 from argparse import Namespace
 from random import choice
 
-from utils import pr, cyan, cprint, banner, generic_menu_loop
+from utils import pr, cyan, cprint, banner, generic_menu_loop, choose_file
 
 from src.modules import *
 
@@ -19,7 +19,7 @@ class Stargen:
             'down': {
                 'dict_url': 'http://ftp.funet.fi/pub/unix/security/passwd/crack/dictionaries/'
             },
-            'crunch': {
+            'crun': {
             },
             'comb': {
                 'len_min': 5,
@@ -31,10 +31,12 @@ class Stargen:
     }
 
     def __init__(self, args: Namespace):
-        # Initialize modules
+        # Load config
         self.config = Config(
             args.config if args.config else Stargen.DEFAULT_CONFIG_PATH,
             Stargen.DEFAULT_CONFIG_SETUP)
+
+        # Initialize modules
         self.keywords = Keyword(self)
         self.crunch = Crunch(self)
         self.downloads = Download(self)
@@ -45,15 +47,17 @@ class Stargen:
         pr(f'Enter "{cyan("help")}" to see list of available commands,\n' +
            '    enter blank to exit from current menu', '?')
 
+        # Create workspace dir
+        self.workspace = Path(self.config['workspace'])
+        Path(self.workspace).mkdir(exist_ok=True)
+
         # Enter main menu
         try:
             generic_menu_loop('stargen', {
-                # 'conf': self.config.menu(),
                 'kwd': self.keywords.menu(),
                 'crun': self.crunch.menu(),
                 'down': self.downloads.menu(),
                 'comb': self.combinations.menu()
-                # 'craft': (self.craft, 'Craft a wordlist from the current setup')
             })
         except (KeyboardInterrupt, EOFError):
             print()

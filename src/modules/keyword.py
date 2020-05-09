@@ -3,6 +3,7 @@ from typing import Callable
 
 from utils import pr, cyan, cprint, pause
 
+from .abs_module import Module
 from ..iteration_timer import IterationTimer
 
 
@@ -21,11 +22,9 @@ def leetify(text: str):
     return result
 
 
-class Keyword(set):
+class Keyword(Module, set):
     def __init__(self, stargen):
-        super().__init__()
-        self.config = stargen.config['modules']['kwd']
-        self.workspace = Path(stargen.config['workspace'])
+        super().__init__(stargen, 'kwd')
 
     def _modifier_wrapper(self, name: str, impact: str, ask: bool, modifier: Callable[[int], None]) -> None:
         count = len(self)
@@ -34,8 +33,11 @@ class Keyword(set):
         modifier(count)
         pr(f'{name} added {cyan(len(self) - count)} new keywords')
 
+    def __str__(self):
+        return 'keywords'
+
     def menu(self) -> tuple:
-        return 'keywords', {
+        return str(self), {
             'show': (self.show, 'List all keywords and show count\n\tOpt: "total" -> Print sum total'),
             'expand': (self.expand, 'Expand keywords\n\tOpt: "all" -> Execute all modifications'),
             'dump': (self.dump, 'Dump keywrods into a file\n\tOpt: <file_name> -> Specify a file name'),
