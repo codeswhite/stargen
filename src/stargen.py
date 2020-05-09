@@ -3,14 +3,40 @@ from pathlib import Path
 from argparse import Namespace
 from random import choice
 
-from utils import pr, cyan, cprint, banner
+from utils import pr, cyan, colored, cprint, banner
 
-from src.generic_loop import generic_loop
 from src.modules import *
 
 
 def clear() -> None:
     print(chr(27) + "[2J")
+
+
+def generic_loop(directory: str, menu: dict) -> None:
+    while 1:
+        inp = input(colored(f'.{directory}->', 'red', attrs=['bold']))
+        if not inp:
+            break
+        if 'help' in inp:
+            for c in menu:
+                v = menu[c]
+                desc = v[1] if type(
+                    v[1]) is str else f'Enter {v[0].capitalize()} menu'
+                print(f'  {cyan(c)} -> {colored(desc, "yellow")}')
+            continue
+
+        pts = inp.split(' ')
+        if pts[0] not in menu:
+            pr('No such command! try "help".', '!')
+            continue
+
+        command = menu.get(pts[0])
+        func = command[0]
+        if callable(func):
+            func(tuple([i for i in pts[1:] if i]))
+        else:
+            generic_loop(f'{directory}.{func}', command[1])
+        print()
 
 
 class Stargen:
