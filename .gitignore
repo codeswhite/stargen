@@ -1,4 +1,5 @@
 **/__pycache__/**
 **/.pyc
 
-dicts/
+/dicts/
+/config.json

@@ -1,1 +1,0 @@
-{"workspace": "/home/maximus/storage/Projects/stargen/dicts", "comb": {"subdir": "comb", "len_min": 5, "len_max": 12, "complex_min": 0, "complex_max": 100}, "crunch": {"subdir": "crunch"}, "down": {"subdir": "down", "dict_url": "http://ftp.funet.fi/pub/unix/security/passwd/crack/dictionaries/"}}
