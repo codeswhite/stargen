@@ -1,53 +1,10 @@
 from pathlib import PurePath, Path
-from utils import pr, cyan, choose, pause
-from os import listdir
+from utils import pr, cyan, choose, pause, human_bytes, count_lines, choose_file, file_volume
 from subprocess import check_output
 from time import time, strftime, gmtime
 from typing import Optional, Callable
 
 from ..iteration_timer import IterationTimer
-
-
-def human_bytes(size_in_bytes: int) -> str:
-    unit = 0
-    while size_in_bytes >= 1024:
-        unit += 1
-        size_in_bytes /= 1024
-    return str(round(size_in_bytes)) + ('', 'KB', 'MB', 'GB', 'TB')[unit]
-
-
-def count_lines(file_path: Path) -> int:
-    # TODO Crossplatformize
-    return int(check_output(('/usr/bin/wc', '-l', str(file_path.resolve()))).decode().split(' ')[0])
-
-
-def choose_file(root_dir: PurePath) -> Optional[PurePath]:
-    def _format(root_dir: PurePath, entry: str) -> str:
-        f = root_dir / entry
-        if f.is_dir():
-            return entry
-        return f'{entry}\t({human_bytes(f.stat().st_size)}, {count_lines(f)})'
-    listing = listdir(root_dir)
-    if not listing:
-        return pr('Empty directory!', '!')
-    while 1:
-        c = choose([_format(root_dir, i) for i in listing], default=-1)
-        if c < 0:
-            return
-        f = root_dir / listing[c]
-        if f.is_dir():
-            f = choose_file(root_dir / f)
-            if not f:
-                continue
-        return f
-
-
-def print_file_volume(path: Path, show: bool = True) -> tuple:
-    sb = path.stat().st_size
-    lc = count_lines(path)
-    if show:
-        pr(f'  {cyan(path.name)} ({human_bytes(sb)}, {lc})')
-    return sb, lc
 
 
 def show_disk_impact(workspace: Path, tsb: int, tlc: int) -> bool:
@@ -81,13 +38,15 @@ def ask_two_wl(workspace: Path, subdir: Path, _total_calc=Callable[[int, int], i
     f1 = choose_file(workspace)
     if not f1:
         return
-    f1sb, f1lc = print_file_volume(f1)
+    f1sb, f1lc, f1txt = file_volume(f1)
+    pr(f'  {f1txt}')
 
     pr('Select secund wordlist:')
     f2 = choose_file(workspace)
     if not f2:
         return
-    f2sb, f2lc = print_file_volume(f2)
+    f2sb, f2lc, f2txt = file_volume(f2)
+    pr(f'  {f2txt}')
 
     # Show disk impact
     tsb = _total_calc(f1sb, f2sb)
