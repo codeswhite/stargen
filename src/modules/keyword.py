@@ -1,8 +1,7 @@
 from pathlib import Path
 from typing import Callable
 
-from .utils import pr, cyan, cprint, pause, choose_file, file_volume, human_bytes
-
+from ..utils import pr, cyan, cprint, pause, choose_file, file_volume, human_bytes
 from .abs_module import Module
 from ..iteration_timer import IterationTimer
 

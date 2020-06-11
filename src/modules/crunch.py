@@ -3,8 +3,8 @@ from pathlib import Path
 import os
 from subprocess import call
 
-from .utils import pr, cyan, cprint, colored, is_package, choose, pause
 
+from ..utils import pr, cyan, cprint, colored, is_package, choose, pause
 from .abs_module import Module
 
 CHAR_FILE = Path('/usr/share/crunch/charset.lst')

@@ -10,6 +10,7 @@ pylint = "*"
 [packages]
 pyfiglet = "*"
 termcolor = "*"
+colorama = "*"
 
 [requires]
 python_version = "3.8"

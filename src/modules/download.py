@@ -4,8 +4,7 @@ from pathlib import Path
 from os import listdir
 import gzip
 
-from .utils import pr, cyan, cprint
-
+from ..utils import pr, cyan, cprint
 from .abs_module import Module
 
 
