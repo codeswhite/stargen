@@ -7,8 +7,6 @@ from .utils import pr, cyan, cprint, banner, colored, choose_file
 from .config import Config
 from .modules import *
 
-import colorama
-
 
 class Stargen:
     DEFAULT_CONFIG_PATH = Path.cwd() / 'config.json'
