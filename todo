@@ -4,7 +4,6 @@ add more keyword expansion modifiers
 
 # Crossplatformization:
     * Functions in utils
-    * 'termcolor' -> 'colorama'
 
 
 # Rewrite Concept:

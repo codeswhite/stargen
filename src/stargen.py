@@ -3,10 +3,11 @@ from pathlib import Path
 from argparse import Namespace
 from random import choice
 
-from utils import pr, cyan, cprint, banner, colored, choose_file
-
+from .utils import pr, cyan, cprint, banner, colored, choose_file
 from .config import Config
 from .modules import *
+
+import colorama
 
 
 class Stargen:
@@ -33,6 +34,8 @@ class Stargen:
     }
 
     def __init__(self, args: Namespace):
+        colorama.init()  # Colorize!
+
         # Load config
         self.config = Config(
             args.config if args.config else Stargen.DEFAULT_CONFIG_PATH,

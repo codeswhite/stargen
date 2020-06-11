@@ -1,5 +1,5 @@
 from pathlib import PurePath, Path
-from utils import pr, cyan, choose, pause, human_bytes, count_lines, choose_file, file_volume
+from .utils import pr, cyan, choose, pause, human_bytes, count_lines, choose_file, file_volume
 from subprocess import check_output
 from time import time, strftime, gmtime
 from typing import Optional, Callable
