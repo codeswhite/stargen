@@ -2,9 +2,5 @@ add more download sources
 improve config
 add more keyword expansion modifiers
 
-# Crossplatformization:
-    * Functions in utils
-
-
 # Rewrite Concept:
     * this can be applied to slain as well

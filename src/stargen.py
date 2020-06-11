@@ -34,8 +34,6 @@ class Stargen:
     }
 
     def __init__(self, args: Namespace):
-        colorama.init()  # Colorize!
-
         # Load config
         self.config = Config(
             args.config if args.config else Stargen.DEFAULT_CONFIG_PATH,
@@ -55,6 +53,7 @@ class Stargen:
         # Initialize menu
         menu = {}
         for mod in self.modules:
+            mod: Module
             menu.update(mod.menu())
 
         # Welcoming message & enter main menu

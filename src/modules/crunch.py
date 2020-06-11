@@ -38,6 +38,8 @@ class Crunch(Module):
     def __init__(self, stargen):
         super().__init__(stargen, 'crun')
 
+        # Check existance
+
         # Identify existing crunches
         try:
             self.crunches = os.listdir(self.dest_dir)
