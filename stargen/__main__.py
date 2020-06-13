@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 
-from stargen.base import Stargen
+from stargen import Stargen
 
 def parse_args() -> Namespace:
     parser = ArgumentParser('Stargen', description="")
