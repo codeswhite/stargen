@@ -3,10 +3,10 @@ from pathlib import Path
 from argparse import Namespace
 from random import choice
 
-from .utils import pr, cyan, cprint, banner, colored, choose_file
-from .config import Config
-from .modules import *
+from stargen import Config, modules
 
+from termcolor import cprint, colored
+from interutils import pr, cyan, banner, choose_file
 
 class Stargen:
     DEFAULT_CONFIG_PATH = Path.cwd() / 'config.json'
@@ -43,15 +43,15 @@ class Stargen:
 
         # Initialize modules
         self.modules = (
-            Keyword(self),
-            Crunch(self),
-            Download(self),
-            Combination(self)
+            modules.Keyword(self),
+            modules.Crunch(self),
+            modules.Download(self),
+            modules.Combination(self)
         )
         # Initialize menu
         menu = {}
         for mod in self.modules:
-            mod: Module
+            mod: modules.Module
             menu.update(mod.menu())
 
         # Welcoming message & enter main menu

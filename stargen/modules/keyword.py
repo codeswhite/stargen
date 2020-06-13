@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Callable
 
-from ..utils import pr, cyan, cprint, pause, choose_file, file_volume, human_bytes
 from .abs_module import Module
 from ..iteration_timer import IterationTimer
 
+from termcolor import cprint
+from interutils import pr, cyan, pause, choose_file, file_volume, human_bytes
 
 def mockify(text: str, start_first: bool) -> str:
     r = ''

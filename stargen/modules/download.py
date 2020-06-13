@@ -4,9 +4,10 @@ from pathlib import Path
 from os import listdir
 import gzip
 
-from ..utils import pr, cyan, cprint
 from .abs_module import Module
 
+from termcolor import cprint
+from interutils import pr, cyan
 
 class Download(Module):
     def __init__(self, stargen):

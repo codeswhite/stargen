@@ -1,6 +1,6 @@
 from time import time
 
-from .utils import pr
+from interutils import pr
 
 
 class IterationTimer:

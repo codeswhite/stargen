@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from .utils import pr, cyan  # , cprint
+from interutils import pr, cyan  # , cprint
 
 
 class Config(dict):
