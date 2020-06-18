@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import Callable
+from time import time
 
 from .abs_module import Module
 from ..iteration_timer import IterationTimer
 
 from termcolor import cprint
 from interutils import pr, cyan, pause, choose_file, file_volume, human_bytes
+
 
 def mockify(text: str, start_first: bool) -> str:
     r = ''
@@ -133,7 +135,8 @@ class Keyword(Module, set):
         dest_dir = self.workspace / self.config['subdir']
         dest_dir.mkdir(exist_ok=True)
 
-        out_file = dest_dir / f'kwd_'
+        save_name = args[0] if args else str(int(time()))
+        out_file = dest_dir.joinpath('kwd_' + save_name)
 
         out_file.write_text('\n'.join(self), encoding='utf-8')
         pr('Dumped into ' + cyan(str(out_file)))
