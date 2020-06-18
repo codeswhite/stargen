@@ -15,7 +15,7 @@ def show_disk_impact(workspace: Path, tsb: int, tlc: int) -> bool:
             ('/usr/bin/df', '--sync', '--output=avail', str(workspace.resolve())))
         b = 1024 * int(b.decode().split('\n')[1])
         if show:
-            pr(f'Available space in workspace: ' + cyan(human_bytes(b)))
+            pr(f"Available space on workspace's disk: " + cyan(human_bytes(b)))
         return b
 
     pr(f'Mixing will allocate {cyan(human_bytes(tsb))} for {cyan("{:,}".format(tlc))} lines')
@@ -102,7 +102,7 @@ class Combination(Module):
                             out_file.write(f'{l1}{l2}\n{l2}{l1}\n')
                             itmr.tick()
 
-        if ask_two_wl((lambda a, b: int(a ** b * 2)), mix_action) is None:
+        if self.ask_two_wl((lambda a, b: int(a ** b * 2)), mix_action) is None:
             return  # Currently redundant - might be of use later
 
     def concat(self, args: tuple) -> None:
@@ -123,5 +123,5 @@ class Combination(Module):
                     out_file.write(l2)
                     itmr.tick()
 
-        if ask_two_wl((lambda a, b: a + b), concat_action) is None:
+        if self.ask_two_wl((lambda a, b: a + b), concat_action) is None:
             return  # Currently redundant - might be of use later
