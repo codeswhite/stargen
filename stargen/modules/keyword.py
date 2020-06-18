@@ -26,7 +26,13 @@ def leetify(text: str):
 
 class Keyword(Module, set):
     def __init__(self, stargen):
+        self.dirty = False
         super().__init__(stargen, 'kwd')
+
+    def add(self, value):
+        if value not in self:
+            self.dirty = True
+        super().add(value)
 
     def _modifier_wrapper(self, name: str, impact: str, ask: bool, modifier: Callable[[int], None]) -> None:
         count = len(self)
@@ -140,6 +146,7 @@ class Keyword(Module, set):
 
         out_file.write_text('\n'.join(self), encoding='utf-8')
         pr('Dumped into ' + cyan(str(out_file)))
+        self.dirty = False
 
     def _add(self, args: tuple) -> None:
         if not args:

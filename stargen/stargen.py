@@ -6,7 +6,7 @@ from random import choice
 from stargen import Config, modules
 
 from termcolor import cprint, colored
-from interutils import pr, cyan, banner, choose_file
+from interutils import pr, cyan, banner, choose_file, pause
 
 
 class Stargen:
@@ -60,11 +60,12 @@ class Stargen:
         cprint(banner('Stargen'), choice(('red', 'green', 'blue')))
         pr(f'Enter "{cyan("help")}" to see list of available commands,\n' +
            '    [Ctrl + C] to exit', '?')
-        try:
-            while 1:
+        while 1:
+            try:
                 # Get user input
                 inp = input(
                     colored(self.config['prompt'], 'red', attrs=['bold']))
+
                 if not inp:
                     continue
 
@@ -84,7 +85,10 @@ class Stargen:
                 # Call menu entry
                 menu.get(cmd)[0](tuple([i for i in pts[1:] if i]))
                 print()
-        except (KeyboardInterrupt, EOFError):
-            print()
-        finally:
-            self.config.save()
+            except (KeyboardInterrupt, EOFError):
+                print()
+                if not set(self.modules[0]):
+                    break
+                if self.modules[0].dirty and not pause('return and save keywords', cancel=True):
+                    break
+        self.config.save()
