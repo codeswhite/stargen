@@ -34,46 +34,6 @@ def show_ebt(algos: dict, tlc: int):
         pr(f'Estimated {cyan(algo)} time: {cyan(ebt)} (assuming elps={elps})')
 
 
-def ask_two_wl(workspace: Path, subdir: Path, _total_calc=Callable[[int, int], int], _write_action=Callable[[Path, Path, Path, IterationTimer], None]):
-    pr('Select first wordlist:')
-    f1 = choose_file(workspace)
-    if not f1:
-        return
-    f1sb, f1lc, f1txt = file_volume(f1)
-    pr(f'  {f1txt}')
-
-    pr('Select secund wordlist:')
-    f2 = choose_file(workspace)
-    if not f2:
-        return
-    f2sb, f2lc, f2txt = file_volume(f2)
-    pr(f'  {f2txt}')
-
-    # Show disk impact
-    tsb = _total_calc(f1sb, f2sb)
-    tlc = _total_calc(f1lc, f2lc)
-    if not show_disk_impact(workspace, tsb, tlc):
-        return
-
-    if not pause(cancel=True):
-        return
-
-    # Verify destination directory
-    dest_dir = workspace / subdir
-    dest_dir.mkdir(exist_ok=True)
-
-    out_path: Path = dest_dir / f'{f1.stem}_{f2.stem}'
-    with out_path.open('w', encoding='utf-8') as out_file:
-        itmr = IterationTimer(tlc, init_interval=1, max_interval=15)
-        _write_action(f1, f2, out_file, itmr)
-
-    # Finalize
-    pr('Wordlist written into: ' + cyan(out_path.name))
-    show_ebt({  # TODO Move to config
-        'WPA2': 57000
-    }, tlc)
-
-
 class Combination(Module):
     def __init__(self, stargen):
         super().__init__(stargen, 'comb')
@@ -83,6 +43,47 @@ class Combination(Module):
             'intermix': (self.mix, 'Mix two wordlists'),
             'concat': (self.concat, 'Concatenate two wordlists')
         }
+
+    def ask_two_wl(self, _total_calc=Callable[[int, int], int], _write_action=Callable[[Path, Path, Path, IterationTimer], None]):
+        pr('Select first wordlist:')
+        f1 = choose_file(self.workspace)
+        if not f1:
+            return
+        f1sb, f1lc, f1txt = file_volume(f1)
+        pr(f'  {f1txt}')
+
+        pr('Select secund wordlist:')
+        f2 = choose_file(self.workspace)
+        if not f2:
+            return
+        f2sb, f2lc, f2txt = file_volume(f2)
+        pr(f'  {f2txt}')
+
+        # Calculate impact impact
+        tsb = _total_calc(f1sb, f2sb)
+        tlc = _total_calc(f1lc, f2lc)
+        if tsb > self.config['max_created_file_size']:
+            return pr('Calculation resulted in an oversized file, aborting!', '!')
+        if not show_disk_impact(self.workspace, tsb, tlc):
+            return
+
+        if not pause(cancel=True):
+            return
+
+        # Verify destination directory
+        dest_dir = self.workspace / self.config['subdir']
+        dest_dir.mkdir(exist_ok=True)
+
+        out_path: Path = dest_dir / f'{f1.stem}_{f2.stem}'
+        with out_path.open('w', encoding='utf-8') as out_file:
+            itmr = IterationTimer(tlc, init_interval=1, max_interval=15)
+            _write_action(f1, f2, out_file, itmr)
+
+        # Finalize
+        pr('Wordlist written into: ' + cyan(out_path.name))
+        show_ebt({  # TODO Move to config
+            'WPA2': 57000
+        }, tlc)
 
     def mix(self, args: tuple) -> None:
         def mix_action(f1: Path, f2: Path, out_file: Path, itmr: IterationTimer) -> None:
@@ -101,8 +102,7 @@ class Combination(Module):
                             out_file.write(f'{l1}{l2}\n{l2}{l1}\n')
                             itmr.tick()
 
-        if ask_two_wl(self.workspace, self.config['subdir'],
-                      (lambda a, b: a ** b * 2), mix_action) is None:
+        if ask_two_wl((lambda a, b: int(a ** b * 2)), mix_action) is None:
             return  # Currently redundant - might be of use later
 
     def concat(self, args: tuple) -> None:
@@ -123,6 +123,5 @@ class Combination(Module):
                     out_file.write(l2)
                     itmr.tick()
 
-        if ask_two_wl(self.workspace, self.config['subdir'],
-                      (lambda a, b: a + b), concat_action) is None:
+        if ask_two_wl((lambda a, b: a + b), concat_action) is None:
             return  # Currently redundant - might be of use later
