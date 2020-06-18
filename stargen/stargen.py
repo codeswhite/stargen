@@ -8,6 +8,7 @@ from stargen import Config, modules
 from termcolor import cprint, colored
 from interutils import pr, cyan, banner, choose_file
 
+
 class Stargen:
     DEFAULT_CONFIG_PATH = Path.cwd() / 'config.json'
     DEFAULT_CONFIG_SETUP = {
@@ -23,6 +24,7 @@ class Stargen:
             'crun': {
             },
             'comb': {
+                'max_created_file_size': 5 * 1024**3,  # 5 GB
                 'len_min': 5,
                 'len_max': 12,
                 'complex_min': 0,
