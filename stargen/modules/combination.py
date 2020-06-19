@@ -3,8 +3,7 @@ from subprocess import check_output
 from time import time, strftime, gmtime
 from typing import Optional, Callable
 
-from interutils import pr, cyan, choose, pause, human_bytes, count_lines, choose_file, file_volume
-from ..iteration_timer import IterationTimer
+from interutils import pr, cyan, choose, pause, human_bytes, count_lines, choose_file, file_volume, IterationTimer
 from .abs_module import Module
 
 

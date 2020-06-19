@@ -3,10 +3,9 @@ from typing import Callable
 from time import time
 
 from .abs_module import Module
-from ..iteration_timer import IterationTimer
 
 from termcolor import cprint
-from interutils import pr, cyan, pause, choose_file, file_volume, human_bytes
+from interutils import pr, cyan, pause, choose_file, file_volume, human_bytes, IterationTimer
 
 
 def mockify(text: str, start_first: bool) -> str:

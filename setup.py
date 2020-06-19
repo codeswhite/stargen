@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="stargen",
-    version="0.8.1",
+    version="0.8.4",
     author="Max G",
     author_email="max3227@gmail.com",
     description="Interactive wordlists generator",
