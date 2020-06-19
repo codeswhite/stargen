@@ -136,12 +136,8 @@ class Keyword(Module, set):
         if not self:
             return pr('No keywords registered yet!', '!')
 
-        # Verify target directory
-        dest_dir = self.workspace / self.config['subdir']
-        dest_dir.mkdir(exist_ok=True)
-
         save_name = args[0] if args else str(int(time()))
-        out_file = dest_dir.joinpath('kwd_' + save_name)
+        out_file = self.dest_dir.joinpath('kwd_' + save_name)
 
         out_file.write_text('\n'.join(self), encoding='utf-8')
         pr('Dumped into ' + cyan(str(out_file)))

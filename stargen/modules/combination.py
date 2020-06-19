@@ -66,11 +66,7 @@ class Combination(Module):
         if not show_disk_impact(self.workspace, tsb, tlc) or not pause(cancel=True):
             return
 
-        # Verify destination directory
-        dest_dir = self.workspace / self.config['subdir']
-        dest_dir.mkdir(exist_ok=True)
-
-        out_path: Path = dest_dir / f'{f1.stem}_{f2.stem}'
+        out_path: Path = self.dest_dir / f'{f1.stem}_{f2.stem}'
         with out_path.open('w', encoding='utf-8') as out_file:
             itmr = IterationTimer(tlc, init_interval=1, max_interval=15)
             _write_action(f1, f2, out_file, itmr)
