@@ -87,9 +87,9 @@ class Combination(Module):
                             l2 = l2.strip()
 
                             out_file.write(f'{l1}{l2}\n{l2}{l1}\n')
-                            itmr.tick()
+                            itmr.tick()  # O(n^2)
 
-        if self.ask_two_wl((lambda a, b: int(a ** b * 2)), mix_action) is None:
+        if self.ask_two_wl((lambda a, b: int(a * b * 2)), mix_action) is None:
             return  # Currently redundant - might be of use later
 
     def concat(self, args: tuple) -> None:
@@ -100,7 +100,7 @@ class Combination(Module):
                         continue
 
                     out_file.write(l1)
-                    itmr.tick()
+                    itmr.tick()  # O(n)
 
             with f2.open(encoding='utf-8') as f2d:
                 for l2 in f2d:
@@ -108,7 +108,7 @@ class Combination(Module):
                         continue
 
                     out_file.write(l2)
-                    itmr.tick()
+                    itmr.tick()  # O(n)
 
         if self.ask_two_wl((lambda a, b: a + b), concat_action) is None:
             return  # Currently redundant - might be of use later
