@@ -114,16 +114,14 @@ class Keyword(Module, set):
         self._modifier_wrapper('MoCkIfY', '*3', not auto_all, _mockify)
 
         def _intermix(count: int) -> None:
-            itmr = IterationTimer(count ** 2 * 2)
+            itmr = IterationTimer(count * 2 * 2)
             snapshot = tuple(self)
             for a in snapshot:
                 for b in snapshot:
                     self.add(a + b)
                     self.add(b + a)
                     itmr.tick()
-        self._modifier_wrapper('Intermix', '**2*2', not auto_all, _intermix)
-
-        # TODO more
+        self._modifier_wrapper('Intermix', '*2*2', not auto_all, _intermix)
 
         # Show current status
         print()

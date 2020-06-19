@@ -8,17 +8,6 @@ from interutils import pr, cyan, choose, pause, human_bytes, count_lines, choose
 from .abs_module import Module
 
 
-def show_disk_impact(workspace: Path, tsb: int, tlc: int) -> bool:
-    pr(f'Mixing will allocate {cyan(human_bytes(tsb))} for {cyan("{:,}".format(tlc))} lines')
-
-    free = disk_usage(workspace.resolve()).free
-    pr(f"Available space on workspace's disk: " + cyan(human_bytes(free)))
-    if tsb > free:
-        pr('Not enough space on the workspace disk for such creation!', '!')
-        return False
-    return True
-
-
 def show_ebt(algos: dict, tlc: int):
     assert tlc > 0
 
@@ -53,15 +42,23 @@ class Combination(Module):
         f2sb, f2lc, f2txt = file_volume(f2)
         pr(f'  {f2txt}')
 
-        # Calculate impact impact
+        # Calculate impact and let the user accept the facts
         tsb = _total_calc(f1sb, f2sb)
         tlc = _total_calc(f1lc, f2lc)
-        if tsb > self.config['max_created_file_size']:
-            return pr('Calculation resulted in an oversized file, aborting!', '!')
-        if not show_disk_impact(self.workspace, tsb, tlc) or not pause(cancel=True):
+        pr(f'Mixing will allocate {cyan(human_bytes(tsb))} for {cyan("{:,}".format(tlc))} lines')
+
+        free = disk_usage(self.workspace.resolve()).free
+        pr(f"Available space on workspace's disk: " + cyan(human_bytes(free)))
+        if tsb > free:
+            pr('Not enough space on the workspace disk for allocation!', '!')
+            return
+        max_size = self.config['max_created_file_size']
+        if tsb > max_size:
+            return pr(f'Calculation resulted in an oversized file (>{human_bytes(max_size)}), aborting!', '!')
+        if not pause(cancel=True):
             return
 
-        out_path: Path = self.dest_dir / f'{f1.stem}_{f2.stem}'
+        out_path = self.dest_dir.joinpath(f'{f1.stem}_{f2.stem}')
         with out_path.open('w', encoding='utf-8') as out_file:
             itmr = IterationTimer(tlc, init_interval=1, max_interval=15)
             _write_action(f1, f2, out_file, itmr)
