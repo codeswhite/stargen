@@ -2,23 +2,18 @@ from pathlib import PurePath, Path
 from subprocess import check_output
 from time import time, strftime, gmtime
 from typing import Optional, Callable
+from shutil import disk_usage
 
 from interutils import pr, cyan, choose, pause, human_bytes, count_lines, choose_file, file_volume, IterationTimer
 from .abs_module import Module
 
 
 def show_disk_impact(workspace: Path, tsb: int, tlc: int) -> bool:
-    def avail_space(workspace: Path, show: bool = True) -> int:
-        # TODO Crossplatformize
-        b = check_output(
-            ('/usr/bin/df', '--sync', '--output=avail', str(workspace.resolve())))
-        b = 1024 * int(b.decode().split('\n')[1])
-        if show:
-            pr(f"Available space on workspace's disk: " + cyan(human_bytes(b)))
-        return b
-
     pr(f'Mixing will allocate {cyan(human_bytes(tsb))} for {cyan("{:,}".format(tlc))} lines')
-    if tsb > avail_space(workspace):
+
+    free = disk_usage(workspace.resolve()).free
+    pr(f"Available space on workspace's disk: " + cyan(human_bytes(free)))
+    if tsb > free:
         pr('Not enough space on the workspace disk for such creation!', '!')
         return False
     return True
