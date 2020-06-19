@@ -1,26 +1,12 @@
 import json
 from pathlib import Path
 
-from interutils import pr, cyan  # , cprint
+from interutils import pr, cyan, DictConfig  # , cprint
 
 
-class Config(dict):
-    def __init__(self, path: Path, default_setup: dict):
-        super().__init__({})
-        self.path = path
-        if path.is_file():
-            # Load
-            self.update(json.loads(self.path.read_text()))
-        else:
-            # Initialize and save
-            pr(f'Config not found, generating fresh in: "{cyan(path)}"', '!')
-            for k, v in default_setup['modules'].items():
-                v.update({'subdir': k})
-            self.update(default_setup)
-            self.save()
-
-    def save(self):
-        self.path.write_text(json.dumps(self))
+class Config(DictConfig):
+    def __init__(self, conf_path: Path, default_config: dict):
+        super().__init__(conf_path, default_config)
 
     # def menu(self) -> tuple:
     #     return 'configuration', {
