@@ -65,7 +65,7 @@ class Keyword(Module, set):
         sb, lc, txt = file_volume(f)
         pr(txt)
 
-        if sb > 100*1024**2:
+        if sb > 1*1024**3:  # 1 GB
             pr(f'File is too larget to be loaded into RAM!', '!')
             return
         pr('Loading keywords...')

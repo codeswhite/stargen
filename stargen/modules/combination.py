@@ -64,10 +64,7 @@ class Combination(Module):
         tlc = _total_calc(f1lc, f2lc)
         if tsb > self.config['max_created_file_size']:
             return pr('Calculation resulted in an oversized file, aborting!', '!')
-        if not show_disk_impact(self.workspace, tsb, tlc):
-            return
-
-        if not pause(cancel=True):
+        if not show_disk_impact(self.workspace, tsb, tlc) or not pause(cancel=True):
             return
 
         # Verify destination directory

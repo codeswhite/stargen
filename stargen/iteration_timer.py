@@ -17,17 +17,10 @@ class IterationTimer:
 
     def tick(self) -> None:
         # Progress
-        self.current += 1
-        c = self.current
+        c = self.current = self.current + 1
         ts = time()
 
         if ts - self.lt > self.interval:
-            # Checkpoint
-            self.lt = ts
-            self.last = c
-            if self.interval <= self.max_interval:
-                self.interval *= 2
-
             # Show status
             delta = c - self.last
             if not delta:
@@ -37,3 +30,9 @@ class IterationTimer:
             eta = int((self.total - c) / spd)
             pr('%.2f%% ' % prcnt +
                f'[{c}/{self.total}]\t@ {spd} ps\tETA: {eta} secs')
+
+            # Checkpoint
+            self.lt = ts
+            self.last = c
+            if self.interval <= self.max_interval:
+                self.interval *= 2
