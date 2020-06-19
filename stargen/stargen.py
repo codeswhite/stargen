@@ -10,9 +10,9 @@ from interutils import pr, cyan, banner, choose_file, pause
 
 
 class Stargen:
-    DEFAULT_CONFIG_PATH = Path.cwd() / 'config.json'
+    DEFAULT_CONFIG_PATH = Path.home().joinpath('.config', 'stargen.json')
     DEFAULT_CONFIG_SETUP = {
-        'workspace': str(Path.cwd().joinpath('dicts').resolve()),
+        'workspace': str(Path.home().joinpath('dicts').resolve()),
         'prompt': '[ stargen ]> ',
         'modules': {
             'kwd': {
