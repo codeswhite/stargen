@@ -87,8 +87,11 @@ class Stargen:
                 print()
             except (KeyboardInterrupt, EOFError):
                 print()
-                if not set(self.modules[0]):
+                dirt = self.modules[0].dirty
+                kwds = set(self.modules[0])
+                if not kwds:
                     break
-                if self.modules[0].dirty and not pause('return and save keywords', cancel=True):
-                    break
+                if dirt and pause('return and save keywords', cancel=True):
+                    continue
+                break
         self.config.save()
