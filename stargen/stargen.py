@@ -3,10 +3,10 @@ from pathlib import Path
 from argparse import Namespace
 from random import choice
 
-from stargen import Config, modules
+from stargen import modules
 
 from termcolor import cprint, colored
-from interutils import pr, cyan, banner, choose_file, pause
+from interutils import pr, cyan, banner, choose_file, pause, DictConfig
 
 
 class Stargen:
@@ -35,7 +35,7 @@ class Stargen:
 
     def __init__(self, args: Namespace):
         # Load config
-        self.config = Config(
+        self.config = DictConfig(
             args.config if args.config else Stargen.DEFAULT_CONFIG_PATH,
             Stargen.DEFAULT_CONFIG_SETUP)
 
