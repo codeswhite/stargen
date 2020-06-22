@@ -7,6 +7,8 @@
 - Concatenate and intermix various wordlists
 - Intellegent pre-run size calculations
 
+[Some Commands Show-down](https://i.imgur.com/o6XCY7p.png)
+
 ## Usage:
 ### Setup:
     git clone https://github.com/codeswhite/stargen
