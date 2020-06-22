@@ -131,3 +131,6 @@ dmypy.json
 # Project-specific objects
 **/dicts/
 **/config.json
+
+# VS Code
+/.vscode
