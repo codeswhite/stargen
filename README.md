@@ -1,4 +1,22 @@
-## Interactive wordlists generator
+## Menu-based wordlist generator:
+
+#### Features include:
+- Moodular and expandable project structure
+- Manipulate your own or download from a list of predefined wordlists
+- Easily generate via `crunch` charsets
+- Concatenate and intermix various wordlists
+- Intellegent pre-run size calculations
+
+## Usage:
+### Setup:
+    git clone https://github.com/codeswhite/stargen
+    pip install interutils
+
+### Run:
+    cd stargen
+    python3 run.py
+
+---
 
 ### TODO:
 
