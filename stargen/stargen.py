@@ -3,7 +3,7 @@ from pathlib import Path
 from argparse import Namespace
 from random import choice
 
-from stargen import modules
+from .modules import *
 
 from termcolor import cprint, colored
 from interutils import pr, cyan, banner, choose_file, pause, DictConfig
@@ -45,15 +45,15 @@ class Stargen:
 
         # Initialize modules
         self.modules = (
-            modules.Keyword(self),
-            modules.Crunch(self),
-            modules.Download(self),
-            modules.Combination(self)
+            Keyword(self),
+            Crunch(self),
+            Download(self),
+            Combination(self)
         )
         # Initialize menu
         menu = {}
         for mod in self.modules:
-            mod: modules.Module
+            mod: Module
             menu.update(mod.menu())
 
         # Welcoming message & enter main menu
