@@ -46,10 +46,9 @@ class Keyword(Module, set):
             'load': (self.load, 'Load keywords from wordlist on the disk'),
             'show': (self.print_all, 'List all keywords and show count\n\tOpt: "total" -> Print sum total'),
             'expand': (self.expand, 'Expand keywords\n\tOpt: "all" -> Execute all modifications'),
-            'dump': (self.dump, 'Dump keywords into a file\n\tOpt: <file_name> -> Specify a file name'),
-            'add': (self._add, 'Add keyword(s)'),
+            'add': (self.add, 'Add keyword(s)'),
             'rem': (self.rem, 'Remove keyword(s)'),
-            'clear': (self._clear, 'Clear all keywords'),
+            'clear': (self.clear, 'Clear all keywords'),
             'isin': (self.isin, 'Check if string(s) among keywords')
         }
 
@@ -142,7 +141,7 @@ class Keyword(Module, set):
         pr('Dumped into ' + cyan(str(out_file)))
         self.dirty = False
 
-    def _add(self, args: tuple) -> None:
+    def add(self, args: tuple) -> None:
         if not args:
             return pr('Usage: add <keyword...>', '*')
         for a in args:
@@ -162,7 +161,7 @@ class Keyword(Module, set):
             pr(f'Removing "{cyan(a)}"')
             self.remove(a)
 
-    def _clear(self, args: tuple) -> None:
+    def clear(self, args: tuple) -> None:
         if not pause('clear keywords', cancel=True):
             return
         self.clear()
