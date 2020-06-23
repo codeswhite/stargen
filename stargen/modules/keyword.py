@@ -38,7 +38,8 @@ class Keyword(Module, set):
         if ask and not pause(f'{cyan(name)} keywords (impact: {impact} => {eval(f"{count}{impact}")})', cancel=True):
             return
         modifier(count)
-        pr(f'{name} added {cyan(len(self) - count)} new keywords')
+        new_count = len(self)
+        pr(f'{name} added {cyan(new_count - count)} new keywords, total: {cyan(new_count)}')
 
     def menu(self) -> tuple:
         return {
