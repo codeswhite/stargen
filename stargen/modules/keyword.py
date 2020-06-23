@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import Callable
 from time import time
+from shutil import copy, move
+from tempfile import mkstemp
 
 from .abs_module import Module
 
-from termcolor import cprint
-from interutils import pr, cyan, pause, choose_file, file_volume, human_bytes, IterationTimer
+from termcolor import cprint, colored
+from interutils import pr, cyan, pause, choose_file, file_volume, IterationTimer, count_lines, ask
 
 
 def mockify(text: str, start_first: bool) -> str:
@@ -23,39 +25,49 @@ def leetify(text: str):
     return result
 
 
-class Keyword(Module, set):
+class Keyword(Module):
     def __init__(self, stargen):
-        self.dirty = False
         super().__init__(stargen, 'kwd')
+        self.current: Path = None
 
-    def add(self, value):
-        if value not in self:
-            self.dirty = True
-        super().add(value)
-
-    def _modifier_wrapper(self, name: str, impact: str, ask: bool, modifier: Callable[[int], None]) -> None:
-        count = len(self)
+    def _modifier_wrapper(self, tmp_path: Path, name: str, impact: str, ask: bool, modifier: Callable[[int], None]) -> None:
+        count = count_lines(tmp_path)
         if ask and not pause(f'{cyan(name)} keywords (impact: {impact} => {eval(f"{count}{impact}")})', cancel=True):
             return
-        modifier(count)
-        new_count = len(self)
+        modifier(tmp_path, count)
+        new_count = count_lines(tmp_path)
         pr(f'{name} added {cyan(new_count - count)} new keywords, total: {cyan(new_count)}')
+
+    def _get_wordlist_path(self):
+        if self.current:
+            return self.current
+        return choose_file(self.workspace)
+
+    def _gen_wordlist(self, wordlist: Path):
+        if wordlist:
+            f = wordlist
+        else:
+            f = self._get_wordlist_path()
+            if not f:
+                return
+        for l in f.read_text(encoding='utf8').splitlines():
+            yield l
 
     def menu(self) -> tuple:
         return {
-            'load': (self.load, 'Load keywords from wordlist on the disk'),
+            'use': (self.use, 'Specify which wordlist to use for operations'),
             'show': (self.print_all, 'List all keywords and show count\n\tOpt: "total" -> Print sum total'),
             'expand': (self.expand, 'Expand keywords\n\tOpt: "all" -> Execute all modifications'),
             'add': (self.add, 'Add keyword(s)'),
-            'rem': (self.rem, 'Remove keyword(s)'),
+            # 'rem': (self.rem, 'Remove keyword(s)'),
             'clear': (self.clear, 'Clear all keywords'),
+            'duplicate': (self.duplicate, 'Duplicate the wordlist\n\tReq: "name" -> Duplicated wordlist file name'),
             'isin': (self.isin, 'Check if string(s) among keywords')
         }
 
-    def load(self, args: tuple) -> None:
-        if self:
-            pr(f'Already have {cyan(len(self))} keywords')
-            if not pause(cancel=True):
+    def use(self, args: tuple) -> None:
+        if self.current:
+            if not pause(f'Switching from {cyan(self.current)} to new wordlist', cancel=True):
                 return
         f = choose_file(self.workspace)
         if not f:
@@ -64,16 +76,20 @@ class Keyword(Module, set):
         sb, lc, txt = file_volume(f)
         pr(txt)
 
-        if sb > 1*1024**3:  # 1 GB
-            pr(f'File is too larget to be loaded into RAM!', '!')
-            return
-        pr('Loading keywords...')
-        self.update(f.read_text(encoding='utf-8').split('\n'))
-        pr('Done!')
+        # if sb > 1*1024**3:  # 1 GB
+        #     pr(f'File is too larget to be loaded into RAM!', '!')
+        #     return
+        self.current = f
+        pr(f'Now using {cyan(self.current)} wordlist!')
 
     def print_all(self, args: tuple) -> None:
-        if not self:
-            return pr('No keywords registered yet!', '!')
+        f = self._get_wordlist_path()
+        if not f:
+            return
+
+        lc = count_lines(f)
+        if not lc:
+            return pr('Wordlist is empty!', '!')
 
         # Get arguments
         total = False
@@ -82,96 +98,156 @@ class Keyword(Module, set):
 
         # Print relevant info
         if not total:
-            if len(self) > self.config['list_treshold']:
-                if not pause(f'show all {cyan(len(self))} keywords', cancel=True):
+            if lc > self.config['list_treshold']:
+                if not pause(f'show all {cyan(lc)} keywords', cancel=True):
                     return
-            for v in self:
+            for v in self._gen_wordlist(f):
                 cprint('  ' + v, "yellow")
-        pr(f'Total keywords count: ' + cyan(len(self)))
+        pr(f'Total keywords count: ' + cyan(lc))
 
     def expand(self, args: tuple) -> None:
-        if not self:
-            return pr('No keywords registered yet!', '!')
+        f = self._get_wordlist_path()
+        if not f:
+            return
 
+        lc = count_lines(f)
+        if not self:
+            return pr('Wordlist is empty!', '!')
+
+        # Get new wordlist name
+        try:
+            print('Enter name for new expanded wordlist:')
+            save_path = input(colored('>', 'yellow'))
+            if not save_path:
+                return
+            save_path = self.workspace.joinpath('expand_' + str(save_path))
+            if save_path.is_file():
+                pr(f'File {cyan(save_path)} already exists, overwrite?', '!')
+                if not pause(cancel=True):
+                    return
+        except KeyboardInterrupt:
+            return
+
+        # Get arguments
         auto_all = False
         if len(args) > 0:
             auto_all = args[0] == 'all'
 
-        def _capitalize(count: int) -> None:
-            for k in tuple(self):
-                self.add(k.capitalize())
-        self._modifier_wrapper('Capitalize', '*2', not auto_all, _capitalize)
+        _, tmp_path = mkstemp('stargen')
+        tmp_path = Path(tmp_path)
 
-        def _leetify(count: int) -> None:
-            for k in tuple(self):
-                self.add(leetify(k))
-        self._modifier_wrapper('13371fy', '*2', not auto_all, _leetify)
+        # Copy initial content
+        tmp_path.write_bytes(f.read_bytes())
 
-        def _mockify(count: int) -> None:
-            for k in tuple(self):
-                self.add(mockify(k, True))
-                self.add(mockify(k, False))
-        self._modifier_wrapper('MoCkIfY', '*3', not auto_all, _mockify)
+        def _capitalize(tmp_p: Path, count: int) -> None:
+            with tmp_p.open('a', encoding='utf8') as file:
+                for k in self._gen_wordlist(f):
+                    file.write(k.capitalize() + '\n')
+        self._modifier_wrapper(tmp_path, 'Capitalize', '*2',
+                               not auto_all, _capitalize)
 
-        def _intermix(count: int) -> None:
+        def _leetify(tmp_p: Path, count: int) -> None:
+            with tmp_p.open('a', encoding='utf8') as file:
+                for k in self._gen_wordlist(f):
+                    file.write(leetify(k) + '\n')
+        self._modifier_wrapper(tmp_path, '13371fy', '*2',
+                               not auto_all, _leetify)
+
+        def _mockify(tmp_p: Path, count: int) -> None:
+            with tmp_p.open('a', encoding='utf8') as file:
+                for k in self._gen_wordlist(f):
+                    file.write(mockify(k, True) + '\n')
+                    file.write(mockify(k, False) + '\n')
+        self._modifier_wrapper(tmp_path, 'MoCkIfY', '*3',
+                               not auto_all, _mockify)
+
+        def _intermix(tmp_p: Path, count: int) -> None:
             itmr = IterationTimer(count ** 2)
-            snapshot = tuple(self)
-            for a in snapshot:
-                for b in snapshot:
-                    self.add(a + b)
-                    self.add(b + a)
-                    itmr.tick()
-        self._modifier_wrapper('Intermix', '**2', not auto_all, _intermix)
+            with tmp_p.open('a', encoding='utf8') as file:
+                for a in self._gen_wordlist(f):
+                    for b in self._gen_wordlist(f):
+                        file.write(a + b + '\n')
+                        file.write(b + a + '\n')
+                        itmr.tick()
+        self._modifier_wrapper(tmp_path, 'Intermix', '**2',
+                               not auto_all, _intermix)
+
+        # Save as
+        pr(f'Saving as: {cyan(save_path)}')
+        move(tmp_path, save_path)
+        new_lc = count_lines(save_path)
 
         # Show current status
         print()
         a = []
-        if len(self) > self.config['list_treshold']:
+        if new_lc > self.config['list_treshold']:
             a += ['total']
         self.print_all(a)
-
-    def dump(self, args: tuple) -> None:
-        if not self:
-            return pr('No keywords registered yet!', '!')
-
-        save_name = args[0] if args else str(int(time()))
-        out_file = self.dest_dir.joinpath('kwd_' + save_name)
-
-        out_file.write_text('\n'.join(self), encoding='utf-8')
-        pr('Dumped into ' + cyan(str(out_file)))
-        self.dirty = False
 
     def add(self, args: tuple) -> None:
         if not args:
             return pr('Usage: add <keyword...>', '*')
+
+        f = self._get_wordlist_path()
+        if not f:
+            return
+
         for a in args:
-            if a in self:
+            if a in self._gen_wordlist(f):
                 pr(f'Skipping duplicate "{cyan(a)}"', '*')
                 continue
             pr(f'Adding "{a}"')
-            self.add(a)
+            with f.open('a') as file:
+                file.write(a)
 
-    def rem(self, args: tuple) -> None:
-        if not args:
-            return pr('Usage: rem <keyword...>', '*')
-        for a in args:
-            if a not in self:
-                pr(f'Keyword "{cyan(a)}" not found!', '!')
-                continue
-            pr(f'Removing "{cyan(a)}"')
-            self.remove(a)
+    # def rem(self, args: tuple) -> None:
+    #     if not args:
+    #         return pr('Usage: rem <keyword...>', '*')
+    #     for a in args:
+    #         if a not in self:
+    #             pr(f'Keyword "{cyan(a)}" not found!', '!')
+    #             continue
+    #         pr(f'Removing "{cyan(a)}"')
+    #         self.remove(a)
 
     def clear(self, args: tuple) -> None:
-        if not pause('clear keywords', cancel=True):
+        if not pause('truncatete wordlist', cancel=True):
             return
-        self.clear()
-        pr('Set cleared!')
+
+        f = self._get_wordlist_path()
+        if not f:
+            return
+
+        with f.open('w') as file:
+            file.truncate()
+        pr('Wordlist truncateted!')
+
+    def duplicate(self, args: tuple) -> None:
+        if not args:
+            return pr('Usage: duplicate <copy_name>', '*')
+
+        f = self._get_wordlist_path()
+        if not f:
+            return
+
+        dst = Path(args[0])
+        if dst.is_file():
+            pr(f'File {cyan(dst)} already exists, overwrite?', '!')
+            if not pause(cancel=True):
+                return
+        copy(f, dst)
+        pr(f'Copied to {cyan(dst)}!')
 
     def isin(self, args: tuple) -> None:
         if not args:
             return pr('Usage: add <keyword...>', '*')
+
+        f = self._get_wordlist_path()
+        if not f:
+            return
+
         for a in args:
-            if a in self:
+            if a in self._gen_wordlist(f):
                 pr(f'Found a match for {cyan(a)}')
             else:
                 pr(f'No match for {cyan(a)}', '!')
