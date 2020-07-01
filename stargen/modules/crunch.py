@@ -6,7 +6,7 @@ from subprocess import call
 from .abs_module import Module
 
 from termcolor import cprint, colored
-from interutils import pr, cyan, is_package, choose, pause
+from interutils import pr, cyan, is_package, choose, pause, ask
 
 CHAR_FILE = Path('/usr/share/crunch/charset.lst')
 
@@ -26,9 +26,33 @@ def gen_nums(charset: str, min_len: int, max_len: int, work_dir: Path) -> (Path,
         pr('Skipping, crunch already exist!')
         return file_name
     pr('Generating crunch: ' + cyan(file_name))
-    pr(f'CMD: "crunch {min_len} {max_len} -f {CHAR_FILE} {charset} -o {ap}"', '~')
+    # pr(f'CMD: "crunch {min_len} {max_len} -f {CHAR_FILE} {charset} -o {ap}"', '~')
     call(['crunch', str(min_len), str(max_len),
           '-f', CHAR_FILE, charset, '-o', ap])
+
+    if not ap.is_file():
+        return None
+    return file_name
+
+
+def prompt_mask() -> (str, None):
+    try:
+        return input(colored('Mask special chars: \n\t@ will insert lower case characters\n\t, will insert upper case characters\n\t% will insert numbers\n\t^ will insert symbols\n\n> ', 'yellow'))
+    except Exception as e:
+        pr('An exception caught!', 'X')
+        return print(e)
+
+
+def gen_mask(file_name: str, mask: str, work_dir: Path) -> (Path, None):
+    ap: Path = work_dir / file_name
+    if ap.is_file():
+        pr('Skipping, crunch already exist!')
+        return file_name
+
+    l = str(len(mask))
+    pr('Generating crunch: ' + cyan(file_name))
+    # pr(f'CMD: "crunch {l} {l} -t {mask} -o {ap}"', '~')
+    call(['crunch', l, l, '-t', mask, '-o', ap])
 
     if not ap.is_file():
         return None
@@ -39,8 +63,6 @@ class Crunch(Module):
     def __init__(self, stargen):
         super().__init__(stargen, 'crun')
 
-        # Check existance
-
         # Identify existing crunches
         try:
             self.crunches = os.listdir(self.dest_dir)
@@ -50,7 +72,7 @@ class Crunch(Module):
     def menu(self) -> tuple:
         return {
             # 'show': (self.show, 'Show crunches'),
-            'crunch': (self.gen, 'Generate a new wordlists via crunch')
+            'crunch': (self.gen, 'Generate a new wordlists via crunch\n\tOpt: "mask" -> Generate a wordlist based on a mask')
         }
 
     def show(self, args: tuple) -> None:
@@ -65,6 +87,27 @@ class Crunch(Module):
     def gen(self, args: tuple) -> None:
         if not is_package('crunch'):
             return pr('Package "crunch" not installed!', 'X')
+
+        # Get args
+        if args:
+            is_mask = args[0] == 'mask'
+
+        if is_mask:
+            mask = prompt_mask()
+            if not mask:
+                return pr('Invalid mask!', '!')
+            file_name = f'mask_{ask("Enter save name:")}.dict'
+
+            # Verify destination dir
+            # TODO Move this into gen_mask and unify gen_mask with gen_nums
+            self.dest_dir.mkdir(exist_ok=True)
+            try:
+                gen_mask(file_name, mask, self.dest_dir)
+            except KeyboardInterrupt:
+                print()
+                pr('Interrupted!', '!')
+            finally:
+                return
 
         # Get min and max seq len
         min_len = prompt_int('Enter minimum length')
@@ -94,7 +137,7 @@ class Crunch(Module):
             if not crunch_name:
                 return pr("Crunch was NOT generated!", 'X')
             self.crunches.append(crunch_name)  # Save result
-        except:
+        except KeyboardInterrupt:
             print()
             pr('Interrupted!', '!')
             return

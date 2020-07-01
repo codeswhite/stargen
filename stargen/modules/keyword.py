@@ -93,7 +93,7 @@ class Keyword(Module):
 
         # Get arguments
         total = False
-        if len(args) > 0:
+        if args:
             total = args[0] == 'total'
 
         # Print relevant info
@@ -130,7 +130,7 @@ class Keyword(Module):
 
         # Get arguments
         auto_all = False
-        if len(args) > 0:
+        if args:
             auto_all = args[0] == 'all'
 
         _, tmp_path = mkstemp('stargen')
