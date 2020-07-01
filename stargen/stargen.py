@@ -14,6 +14,8 @@ class Stargen:
     DEFAULT_CONFIG_SETUP = {
         'workspace': str(Path.home().joinpath('dicts').resolve()),
         'prompt': '[ stargen ]> ',
+        # Alternatively use "$U" to show filename with extension
+        'use_prompt': '[ stargen | $u ]> ',
         'modules': {
             'kwd': {
                 'list_treshold': 50
@@ -62,9 +64,16 @@ class Stargen:
            '    [Ctrl + C] to exit', '?')
         while 1:
             try:
+                # Configure prompt
+                current = self.modules[0].current
+                if current:
+                    prompt = self.config['use_prompt']
+                    prompt = prompt.replace('$u', current.stem)
+                    prompt = prompt.replace('$U', current.name)
+                else:
+                    prompt = self.config['prompt']
                 # Get user input
-                inp = input(
-                    colored(self.config['prompt'], 'red', attrs=['bold']))
+                inp = input(colored(prompt, 'red', attrs=['bold']))
 
                 if not inp:
                     continue
