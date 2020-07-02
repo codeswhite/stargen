@@ -3,7 +3,7 @@
 #### Features include:
 - Moodular and expandable project structure
 - Manipulate your own or download from a list of predefined wordlists
-- Easily generate via `crunch` charsets
+- Easily generate via `crunch` charsets or masks
 - Concatenate and intermix various wordlists
 - Intellegent pre-run size calculations
 
