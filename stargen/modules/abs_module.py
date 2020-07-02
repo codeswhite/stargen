@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod
 class Module(metaclass=ABCMeta):
     def __init__(self, stargen, short_n: str):
         super().__init__()
+        # Initialize abstract module configuration
         self.short_n = short_n
         self.stargen = stargen
 

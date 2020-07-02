@@ -10,9 +10,14 @@ from interutils import pr, cyan, choose, pause, human_bytes, count_lines, choose
 
 
 def show_ebt(algos: dict, tlc: int):
+    """
+    Show estimated burn time
+    tlc -> Total lines count
+    """
     assert tlc > 0
 
     for algo, elps in algos.items():
+        # Calculate EBT
         ebt = ((tlc * 2) / elps)
         ebt = strftime('%H:%M:%S', gmtime(ebt))
         pr(f'Estimated {cyan(algo)} time: {cyan(ebt)} (assuming elps={elps})')
@@ -29,19 +34,22 @@ class Combination(Module):
         }
 
     def ask_two_wl(self, _total_calc=Callable[[int, int], int], _write_action=Callable[[Path, Path, Path, IterationTimer], None]):
-        pr('Select first wordlist:')
-        f1 = choose_file(self.workspace)
-        if not f1:
-            return
-        f1sb, f1lc, f1txt = file_volume(f1)
-        pr(f'  {f1txt}')
+        def _select_wordlist(title: str):
+            pr(f'Select {title} wordlist:')
+            f = choose_file(self.workspace)
+            if not f:
+                raise KeyboardInterrupt
+            fsb, flc, ftxt = file_volume(f)
+            pr(f'  {ftxt}')
+            return f, fsb, flc
 
-        pr('Select secund wordlist:')
-        f2 = choose_file(self.workspace)
-        if not f2:
-            return
-        f2sb, f2lc, f2txt = file_volume(f2)
-        pr(f'  {f2txt}')
+        # Get wordlists
+        try:
+            f1, f1sb, f1lc = _select_wordlist('first')
+            f2, f2sb, f2lc = _select_wordlist('secund')
+        except KeyboardInterrupt:
+            print()
+            return pr('Interrupted', '!')
 
         # Calculate impact and let the user accept the facts
         tsb = _total_calc(f1sb, f2sb)
