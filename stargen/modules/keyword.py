@@ -200,16 +200,6 @@ class Keyword(Module):
             with f.open('a') as file:
                 file.write(a)
 
-    # def rem(self, args: tuple) -> None:
-    #     if not args:
-    #         return pr('Usage: rem <keyword...>', '*')
-    #     for a in args:
-    #         if a not in self:
-    #             pr(f'Keyword "{cyan(a)}" not found!', '!')
-    #             continue
-    #         pr(f'Removing "{cyan(a)}"')
-    #         self.remove(a)
-
     def clear(self, args: tuple) -> None:
         if not pause('truncatete wordlist', cancel=True):
             return
