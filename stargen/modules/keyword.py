@@ -230,7 +230,7 @@ class Keyword(Module):
 
     def isin(self, args: tuple) -> None:
         if not args:
-            return pr('Usage: add <keyword...>', '*')
+            return pr('Usage: isin <keyword...>', '*')
 
         f = self._get_wordlist_path()
         if not f:
