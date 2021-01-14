@@ -41,6 +41,7 @@ class Keyword(Module):
     def _get_wordlist_path(self):
         if self.current:
             return self.current
+        pr('Please choose a wordlist')
         return choose_file(self.workspace)
 
     def _gen_wordlist(self, wordlist: Path):

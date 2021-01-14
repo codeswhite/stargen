@@ -65,16 +65,15 @@ class Stargen:
         while 1:
             try:
                 # Configure prompt
+                prompt = self.config['prompt']
                 current = self.modules[0].current
                 if current:
                     prompt = self.config['use_prompt']
                     prompt = prompt.replace('$u', current.stem)
                     prompt = prompt.replace('$U', current.name)
-                else:
-                    prompt = self.config['prompt']
+                
                 # Get user input
                 inp = input(colored(prompt, 'red', attrs=['bold']))
-
                 if not inp:
                     continue
 
@@ -92,7 +91,9 @@ class Stargen:
                     continue
 
                 # Call menu entry
-                menu.get(cmd)[0](tuple([i for i in pts[1:] if i]))
+                args = tuple([i for i in pts[1:] if i])
+                print('Calling:', cmd, 'With args:', [args])
+                menu.get(cmd)[0](args)
                 print()
             except (KeyboardInterrupt, EOFError):
                 print()

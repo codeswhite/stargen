@@ -6,7 +6,7 @@ from shutil import disk_usage
 
 from .abs_module import Module
 
-from interutils import pr, cyan, choose, pause, human_bytes, count_lines, choose_file, file_volume, IterationTimer
+from interutils import pr, cyan, pause, human_bytes, count_lines, choose_file, file_volume, IterationTimer
 
 
 def show_ebt(algos: dict, tlc: int):
