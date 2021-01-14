@@ -41,6 +41,7 @@ class Keyword(Module):
     def _get_wordlist_path(self):
         if self.current:
             return self.current
+        pr('Please choose a wordlist')
         return choose_file(self.workspace)
 
     def _gen_wordlist(self, wordlist: Path):
@@ -230,7 +231,7 @@ class Keyword(Module):
 
     def isin(self, args: tuple) -> None:
         if not args:
-            return pr('Usage: add <keyword...>', '*')
+            return pr('Usage: isin <keyword...>', '*')
 
         f = self._get_wordlist_path()
         if not f:
