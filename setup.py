@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="stargen",
-    version="0.8.5",
+    version="0.8.6",
     description="Framework for wordlist generation, combination and expansion",
     url="https://github.com/codeswhite/stargen",
     classifiers=[
@@ -16,7 +16,6 @@ setuptools.setup(
     python_requires='>=3.8',
     install_requires=[
         'interutils',
-        'pyfiglet',
     ],
     entry_points={
         'console_scripts': [
